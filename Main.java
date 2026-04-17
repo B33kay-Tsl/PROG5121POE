@@ -2,53 +2,90 @@ package prog5121poe;
 
 import java.util.Scanner;
 
+/**
+ * ================================================
+ * PROG5121 - Part 1
+ * Author    : Bonginkosi Dlamini
+ * Student No: ST10511967
+ * Date      : April 2026
+ * Purpose   : This is the main class that runs the
+ *             program. It collects user input using
+ *             Scanner and uses the Login class to
+ *             register and log in the user.
+ * ================================================
+ */
 public class Main {
 
     public static void main(String[] args) {
+
+        // Create a Scanner object to read input typed by the user
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("=== Welcome to the Registration System ===");
-        System.out.println();
+        // ── Welcome Banner ────────────────────────
+        // Print a welcome message when the program starts
+        System.out.println("======================================");
+        System.out.println("   Welcome to the Registration System");
+        System.out.println("======================================\n");
 
+        // ── Collect User Details ──────────────────
+       
         System.out.print("Enter your first name: ");
-        String firstName = scanner.nextLine();
+        String firstName = scanner.nextLine().trim();
 
         System.out.print("Enter your last name: ");
-        String lastName = scanner.nextLine();
+        String lastName = scanner.nextLine().trim();
 
         System.out.print("Enter a username (must contain _ and be max 5 characters): ");
-        String username = scanner.nextLine();
+        String username = scanner.nextLine().trim();
 
         System.out.print("Enter a password: ");
-        String password = scanner.nextLine();
+        String password = scanner.nextLine().trim(); 
 
         System.out.print("Enter your South African cell number (e.g. +27821234567): ");
-        String cellPhone = scanner.nextLine();
+        String cellPhone = scanner.nextLine().trim(); 
 
+        // ── Create Login Object ───────────────────
         Login login = new Login(firstName, lastName, username, password, cellPhone);
 
-        if (login.checkCellPhoneNumber()) {
-            System.out.println("Cell phone number successfully added.");
-        } else {
-            System.out.println("Cell phone number incorrectly formatted or does not contain international code.");
-        }
+        // ── Attempt Registration ──────────────────
+        System.out.println("\n--- Registration Feedback ---");
 
+        // Call registerUser() which validates all fields and returns a message
         String registrationResult = login.registerUser();
+
+        // Print whatever message registerUser() returned
         System.out.println(registrationResult);
 
-        if (registrationResult.startsWith("Welcome")) {
-            System.out.println();
-            System.out.println("=== Login ===");
+        // ── Check Registration Result ─────────────
+        boolean registrationSuccess = registrationResult.contains("successfully captured");
 
-            System.out.print("Enter your username to log in: ");
-            String enteredUsername = scanner.nextLine();
+        // ── Login Section ─────────────────────────
+        if (registrationSuccess) {
 
-            System.out.print("Enter your password to log in: ");
-            String enteredPassword = scanner.nextLine();
+            // Print the login banner
+            System.out.println("\n======================================");
+            System.out.println("               LOGIN");
+            System.out.println("======================================");
 
-            System.out.println(login.returnLoginStatus(enteredUsername, enteredPassword));
+            // Ask the user to enter their login credentials
+            System.out.print("Enter your username: ");
+            String enteredUsername = scanner.nextLine().trim();
+
+            System.out.print("Enter your password: ");
+            String enteredPassword = scanner.nextLine().trim(); 
+
+            // Call returnLoginStatus() with the entered credentials
+            String loginMessage = login.returnLoginStatus(enteredUsername, enteredPassword);
+
+            // Print the login result message
+            System.out.println("\n" + loginMessage);
+
+        } else {
+            // Registration failed - tell the user to restart and try again
+            System.out.println("\nRegistration failed. Please restart and try again.");
         }
 
+        // ── Close Scanner ─────────────────────────
         scanner.close();
     }
 }
