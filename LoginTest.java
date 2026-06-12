@@ -7,8 +7,8 @@ import static org.junit.Assert.*;
 /**
  * ================================================
  * PROG5121 - Part 1
- * Author    : Bonginkosi Dlamini
- * Student No: ST10511967
+ * Author    : Your Full Name
+ * Student No: Your Student Number
  * Date      : April 2026
  * Purpose   : This class contains all JUnit unit tests
  *             to verify that every method in the Login
