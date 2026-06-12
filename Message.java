@@ -4,221 +4,167 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * ================================================
- * PROG5121 - Part 2
- * Author    : Your Full Name
- * Student No: Your Student Number
- * Date      : April 2026
- * Purpose   : This class handles all messaging
- *             functionality including creating,
- *             sending, storing and displaying
- *             messages.
- * ================================================
+ * PROG5121 - Messaging Functionality
+ * Author: Bonginkosi Dlamini (ST10511967)
+ * Date: April 2026
  */
 public class Message {
 
-    // Fields
-    // Stores the unique message ID (auto-generated)
-    private String messageID;
-
-    // Stores the recipient's cell number
-    private String recipientCell;
-
-    // Stores the message text typed by the user
+    // ── Data Fields ───────────────────────────────────────────────
+    private String messageID;       // 10-digit random unique ID
+    private String recipientCell;   // Validated international cell number
     private String messageText;
+    private String messageHash;     // Upper-case compound tracking key
 
-    // Stores the auto-generated hash for this message
-    private String messageHash;
-
-    // Tracks how many messages have been sent in total
+    // ── Metrics & Counters ────────────────────────────────────────
     private static int totalMessagesSent = 0;
+    private static int messageCounter    = 0;
 
-    // Tracks total number of messages created
-    private static int messageCounter = 0;
+    // ── Part 2: Dynamic Storage (ArrayLists) ──────────────────────
+    private static ArrayList<String> sentMessages    = new ArrayList<>();
+    private static ArrayList<String> storedMessages  = new ArrayList<>();
+    private static ArrayList<String> messageHashes   = new ArrayList<>();
+    private static ArrayList<String> messageIDs      = new ArrayList<>();
+    private static ArrayList<String> recipients      = new ArrayList<>();
 
-    // Stores all sent messages in a list
-    private static ArrayList<String> sentMessages = new ArrayList<>();
+    // ── Part 3: Fixed Storage (Arrays) ────────────────────────────
+    private static final int MAX_MESSAGES = 100;
 
-    // Stores all stored messages in a list
-    private static ArrayList<String> storedMessages = new ArrayList<>();
+    // Category Arrays
+    private static String[] sentMessagesArray    = new String[MAX_MESSAGES];
+    private static String[] storedMessagesArray  = new String[MAX_MESSAGES];
+    private static String[] disregardedArray     = new String[MAX_MESSAGES];
 
-    // Stores all message hashes
-    private static ArrayList<String> messageHashes = new ArrayList<>();
+    // Master Tracking Arrays
+    private static String[] allMessagesArray     = new String[MAX_MESSAGES];
+    private static String[] messageIDArray       = new String[MAX_MESSAGES];
+    private static String[] messageHashArray     = new String[MAX_MESSAGES];
+    private static String[] recipientArray       = new String[MAX_MESSAGES];
+    private static String[] allFlagsArray        = new String[MAX_MESSAGES];
 
-    // Stores all message IDs
-    private static ArrayList<String> messageIDs = new ArrayList<>();
+    // Array Allocation Trackers
+    private static int sentCount        = 0;
+    private static int storedCount      = 0;
+    private static int disregardedCount = 0;
+    private static int allCount         = 0;
 
-    // Stores all recipients
-    private static ArrayList<String> recipients = new ArrayList<>();
-
-    // Constructor
     /**
-     * Creates a new Message object.
-     * Auto-generates the message ID and hash.
-     *
-     * @param recipientCell The recipient's cell number
-     * @param messageText   The message to be sent
+     * Initializes a new Message and auto-generates its unique tracking properties.
      */
     public Message(String recipientCell, String messageText) {
-        this.recipientCell = recipientCell; // Save recipient number
-        this.messageText   = messageText;   // Save message text
-        messageCounter++;                   // Increment message count
-
-        // Auto-generate a unique message ID
-        this.messageID   = generateMessageID();
-
-        // Auto-generate the message hash
-        this.messageHash = createMessageHash();
+        this.recipientCell = recipientCell;
+        this.messageText   = messageText;
+        messageCounter++;
+        this.messageID     = generateMessageID();
+        this.messageHash   = createMessageHash();
     }
 
-    // Auto-generate Message ID
     /**
-     * Generates a random 10-character message ID
-     * using numbers only.
-     *
-     * @return A String of 10 random digits
+     * Generates a unique 10-digit numeric ID string.
      */
     private String generateMessageID() {
-        // Create a Random object to generate random numbers
         Random random = new Random();
-
-        // Build a 10-digit ID using a StringBuilder
         StringBuilder id = new StringBuilder();
         for (int i = 0; i < 10; i++) {
-            // Add a random digit (0-9) each time
             id.append(random.nextInt(10));
         }
-        return id.toString(); // Return the completed ID
+        return id.toString();
     }
 
-    
-    // VALIDATION METHODS
-    
+    // ── Validation Methods ────────────────────────────────────────
 
-    /**
-     * Checks if the message ID is valid.
-     * Rule: Must not exceed 10 characters.
-     *
-     * @return true if ID is 10 characters or less
-     */
     public boolean checkMessageID() {
-        // Check that the message ID length does not exceed 10
         return messageID.length() <= 10;
     }
 
     /**
-     * Checks if the recipient cell number is valid.
-     * Rule: Must start with '+' and contain international code.
-     *
-     * @return true if cell number is correctly formatted
+     * Validates international cell formats (e.g., +27821234567).
      */
     public boolean checkRecipientCell() {
-        // Use regex to validate: starts with +, then digits, correct length
         return recipientCell.matches("^\\+\\d{1,3}\\d{7,10}$");
     }
 
-    // HASH METHOD
-  
+    // ── Utilities & Business Logic ───────────────────────────────
 
     /**
-     * Creates a unique message hash using:
-     * - First two digits of the message ID
-     * - Last two digits of the message ID
-     * - First word of the message
-     * - Last word of the message
-     * The hash is converted to uppercase.
-     *
-     * @return The generated hash as a String
+     * Generates an uppercase signature: [ID First 2]:[ID Last 2]:[First Word][Last Word]
      */
     public String createMessageHash() {
-        // Get the first two characters of the message ID
-        String firstTwo = messageID.substring(0, 2);
-
-        // Get the last two characters of the message ID
-        String lastTwo = messageID.substring(messageID.length() - 2);
-
-        // Split the message into individual words
-        String[] words = messageText.trim().split(" ");
-
-        // Get the first word of the message
+        String firstTwo  = messageID.substring(0, 2);
+        String lastTwo   = messageID.substring(messageID.length() - 2);
+        String[] words   = messageText.trim().split("\\s+");
         String firstWord = words[0];
-
-        // Get the last word of the message
-        // If there is only one word, first and last will be the same
-        String lastWord = words[words.length - 1];
-
-        // Build the hash by combining all parts
-        String hash = firstTwo + ":" + lastTwo + ":" + firstWord + lastWord;
-
-        // Convert entire hash to uppercase and return it
+        String lastWord  = words[words.length - 1];
+        String hash      = firstTwo + ":" + lastTwo + ":" + firstWord + lastWord;
         return hash.toUpperCase();
     }
 
-    // SEND MESSAGE METHOD
-    
-
     /**
-     * Handles what happens to the message based on user choice.
-     * Options:
-     * 1 - Send Message
-     * 2 - Disregard Message
-     * 3 - Store Message
-     *
-     * @param choice The user's menu selection (1, 2, or 3)
-     * @return A String message confirming the action taken
+     * Routes the message to parallel data structures.
+     * @param choice 1 = Send, 2 = Disregard, 3 = Store
      */
     public String SentMessage(int choice) {
-        // Check which option the user selected
         switch (choice) {
-
             case 1:
-                // User chose to SEND the message
-                totalMessagesSent++;        
-                sentMessages.add(messageText);  
-                messageHashes.add(messageHash); 
-                messageIDs.add(messageID);      
-                recipients.add(recipientCell); 
+                totalMessagesSent++;
+                sentMessages.add(messageText);
+                messageHashes.add(messageHash);
+                messageIDs.add(messageID);
+                recipients.add(recipientCell);
+                if (sentCount < MAX_MESSAGES) {
+                    sentMessagesArray[sentCount] = messageText;
+                    sentCount++;
+                }
+                addToAllArrays("Sent");
                 return "Message successfully sent.";
 
             case 2:
-                // User chose to DISREGARD the message
-                // Message is deleted and not saved anywhere
+                if (disregardedCount < MAX_MESSAGES) {
+                    disregardedArray[disregardedCount] = messageText;
+                    disregardedCount++;
+                }
+                addToAllArrays("Disregarded");
                 return "Message successfully disregarded.";
 
             case 3:
-                // User chose to STORE the message for later
                 storedMessages.add(messageText);
-                messageHashes.add(messageHash);  
-                messageIDs.add(messageID);       
-                recipients.add(recipientCell);   
+                messageHashes.add(messageHash);
+                messageIDs.add(messageID);
+                recipients.add(recipientCell);
+                if (storedCount < MAX_MESSAGES) {
+                    storedMessagesArray[storedCount] = messageText;
+                    storedCount++;
+                }
+                addToAllArrays("Stored");
                 return "Message successfully stored.";
 
             default:
-                // User entered an invalid option
                 return "Invalid option. Please choose 1, 2, or 3.";
         }
     }
 
-    
-    // DISPLAY METHODS
-   
-
     /**
-     * Prints all sent messages to the screen.
-     * Displays: Message ID, Hash, Recipient, and Message text
-     * for every message that was sent.
+     * Centralized backup ledger writing to master tracking arrays.
      */
+    private void addToAllArrays(String flag) {
+        if (allCount < MAX_MESSAGES) {
+            allMessagesArray[allCount] = messageText;
+            messageIDArray[allCount]   = messageID;
+            messageHashArray[allCount] = messageHash;
+            recipientArray[allCount]   = recipientCell;
+            allFlagsArray[allCount]    = flag;
+            allCount++;
+        }
+    }
+
+    // ── Output & Search Engines ───────────────────────────────────
+
     public void printMessages() {
-        // Check if any messages have been sent
         if (sentMessages.isEmpty()) {
             System.out.println("No messages have been sent yet.");
-            return; 
+            return;
         }
-
-        // Print a header
         System.out.println("\n===== SENT MESSAGES =====");
-
-        // Loop through all sent messages and print each one
         for (int i = 0; i < sentMessages.size(); i++) {
             System.out.println("\nMessage " + (i + 1) + ":");
             System.out.println("Message ID   : " + messageIDs.get(i));
@@ -229,47 +175,142 @@ public class Message {
         }
     }
 
-    /**
-     * Returns the total number of messages that have been sent.
-     *
-     * @return int - total number of sent messages
-     */
     public int returnTotalMessages() {
-        // Return the static counter that tracks sent messages
         return totalMessagesSent;
     }
 
-    
-    // STORE MESSAGE METHOD (own method)
-   
-    /**
-     * Custom method to store the message in the stored list.
-     * This is the student's own defined storeMessage() method.
-     */
     public void storeMessage() {
-        // Add the message to the stored messages list
         storedMessages.add(messageText);
         System.out.println("Message stored successfully.");
     }
 
-    
-    // GETTERS
+    public static String returnSentMessages() {
+        if (sentCount == 0) return "No messages sent.";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < sentCount; i++) {
+            if (i > 0) sb.append("\n");
+            sb.append(sentMessagesArray[i]);
+        }
+        return sb.toString();
+    }
 
-    // Returns the message ID
-    public String getMessageID()   { return messageID; }
+    public static String getLongestMessage() {
+        if (storedCount == 0) return "No stored messages found.";
+        String longest = storedMessagesArray[0];
+        for (int i = 1; i < storedCount; i++) {
+            if (storedMessagesArray[i].length() > longest.length()) {
+                longest = storedMessagesArray[i];
+            }
+        }
+        return longest;
+    }
 
-    // Returns the message hash
-    public String getMessageHash() { return messageHash; }
+    public static String searchByMessageID(String id) {
+        for (int i = 0; i < allCount; i++) {
+            if (messageIDArray[i] != null && messageIDArray[i].equals(id)) {
+                return allMessagesArray[i];
+            }
+        }
+        return "Message ID not found.";
+    }
 
-    // Returns the recipient cell number
+    public static String searchByRecipient(String recipient) {
+        StringBuilder result = new StringBuilder();
+        boolean found = false;
+        for (int i = 0; i < allCount; i++) {
+            if (recipientArray[i] != null && recipientArray[i].equals(recipient)) {
+                if (found) result.append("\n");
+                result.append(allMessagesArray[i]);
+                found = true;
+            }
+        }
+        if (!found) return "No messages found for this recipient.";
+        return result.toString();
+    }
+
+    /**
+     * Locates a targeted entry by hash key, wipes it, and shifts subsequent cells left.
+     */
+    public static String deleteByHash(String hash) {
+        for (int i = 0; i < allCount; i++) {
+            if (messageHashArray[i] != null && messageHashArray[i].equals(hash)) {
+                String deletedHash = messageHashArray[i];
+                
+                // Array shift algorithm
+                for (int j = i; j < allCount - 1; j++) {
+                    allMessagesArray[j]  = allMessagesArray[j + 1];
+                    messageIDArray[j]    = messageIDArray[j + 1];
+                    messageHashArray[j]  = messageHashArray[j + 1];
+                    recipientArray[j]    = recipientArray[j + 1];
+                    allFlagsArray[j]     = allFlagsArray[j + 1];
+                }
+                
+                // Clear dangling references at trailing index
+                allMessagesArray[allCount - 1]  = null;
+                messageIDArray[allCount - 1]    = null;
+                messageHashArray[allCount - 1]  = null;
+                recipientArray[allCount - 1]    = null;
+                allFlagsArray[allCount - 1]     = null;
+                allCount--;
+                return "Message Hash " + deletedHash + " successfully deleted.";
+            }
+        }
+        return "Message Hash not found.";
+    }
+
+    public static String displayReport() {
+        if (storedCount == 0) return "No stored messages to display.";
+        StringBuilder report = new StringBuilder();
+        report.append("===== STORED MESSAGES REPORT =====");
+        for (int i = 0; i < allCount; i++) {
+            if ("Stored".equals(allFlagsArray[i])) {
+                report.append("\n\nMessage ID   : ").append(messageIDArray[i]);
+                report.append("\nMessage Hash : ").append(messageHashArray[i]);
+                report.append("\nRecipient    : ").append(recipientArray[i]);
+                report.append("\nMessage      : ").append(allMessagesArray[i]);
+                report.append("\n-------------------------");
+            }
+        }
+        return report.toString();
+    }
+
+    /**
+     * Flushes states across all storage variants (Primarily for Unit Test fixtures).
+     */
+    public static void resetAll() {
+        sentMessages   = new ArrayList<>();
+        storedMessages = new ArrayList<>();
+        messageHashes  = new ArrayList<>();
+        messageIDs     = new ArrayList<>();
+        recipients     = new ArrayList<>();
+
+        sentMessagesArray   = new String[MAX_MESSAGES];
+        storedMessagesArray = new String[MAX_MESSAGES];
+        disregardedArray    = new String[MAX_MESSAGES];
+        allMessagesArray    = new String[MAX_MESSAGES];
+        messageIDArray      = new String[MAX_MESSAGES];
+        messageHashArray    = new String[MAX_MESSAGES];
+        recipientArray      = new String[MAX_MESSAGES];
+        allFlagsArray       = new String[MAX_MESSAGES];
+
+        sentCount        = 0;
+        storedCount      = 0;
+        disregardedCount = 0;
+        allCount         = 0;
+        totalMessagesSent = 0;
+        messageCounter   = 0;
+    }
+
+    // ── Getters ───────────────────────────────────────────────────
+    public String getMessageID()     { return messageID; }
+    public String getMessageHash()   { return messageHash; }
     public String getRecipientCell() { return recipientCell; }
+    public String getMessageText()   { return messageText; }
 
-    // Returns the message text
-    public String getMessageText() { return messageText; }
-
-    // Returns the full list of sent messages
-    public static ArrayList<String> getSentMessages() { return sentMessages; }
-
-    // Returns the full list of stored messages
+    public static String[] getSentMessagesArray()   { return sentMessagesArray; }
+    public static String[] getStoredMessagesArray() { return storedMessagesArray; }
+    public static int getSentCount()                { return sentCount; }
+    public static int getStoredCount()              { return storedCount; }
+    public static ArrayList<String> getSentMessages()   { return sentMessages; }
     public static ArrayList<String> getStoredMessages() { return storedMessages; }
 }
